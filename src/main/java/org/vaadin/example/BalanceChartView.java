@@ -25,7 +25,6 @@ public class BalanceChartView extends VerticalLayout {
         List<MainView.Expense> allExpenses = dao.getAllExpenses();
         List<Income> allIncome = dao.getAllIncome();
 
-        // Group income and expenses by month
         TreeSet<LocalDate> months = new TreeSet<>();
 
         Map<LocalDate, Double> incomeMap = new HashMap<>();
@@ -37,12 +36,25 @@ public class BalanceChartView extends VerticalLayout {
 
         Map<LocalDate, Double> expenseMap = new HashMap<>();
         for (MainView.Expense expense : allExpenses) {
-            LocalDate month = expense.getDate().withDayOfMonth(1);
-            months.add(month);
-            expenseMap.put(month, expenseMap.getOrDefault(month, 0.0) + expense.getAmount());
+            LocalDate startMonth = expense.getDate().withDayOfMonth(1);
+
+            if (expense.getRecurring()) {
+                for (int i = 0; i < 36; i++) {
+                    LocalDate recurringMonth = "Monthly".equals(expense.getRecurrenceType())
+                            ? startMonth.plusMonths(i)
+                            : startMonth.plusYears(i);
+
+                    if (recurringMonth.isAfter(LocalDate.now().plusMonths(12))) break;
+
+                    months.add(recurringMonth);
+                    expenseMap.put(recurringMonth, expenseMap.getOrDefault(recurringMonth, 0.0) + expense.getAmount());
+                }
+            } else {
+                months.add(startMonth);
+                expenseMap.put(startMonth, expenseMap.getOrDefault(startMonth, 0.0) + expense.getAmount());
+            }
         }
 
-        // Build cumulative balance
         List<String> monthLabels = new ArrayList<>();
         List<Double> balanceData = new ArrayList<>();
         double runningBalance = 0.0;
@@ -56,7 +68,6 @@ public class BalanceChartView extends VerticalLayout {
             balanceData.add(runningBalance);
         }
 
-        // Create chart
         Chart chart = new Chart(ChartType.LINE);
         Configuration conf = chart.getConfiguration();
         conf.setTitle("Running Balance Over Time");
@@ -69,14 +80,10 @@ public class BalanceChartView extends VerticalLayout {
         y.setTitle("Balance (€)");
         conf.addyAxis(y);
 
-        ListSeries series = new ListSeries("Balance", balanceData.toArray(new Number[0]));
-        conf.addSeries(series);
-
-        Tooltip tooltip = new Tooltip();
-        tooltip.setShared(true);
-        conf.setTooltip(tooltip);
-
+        conf.addSeries(new ListSeries("Balance", balanceData.toArray(new Number[0])));
+        conf.setTooltip(new Tooltip(true));
         chart.setSizeFull();
+
         add(chart);
     }
 }

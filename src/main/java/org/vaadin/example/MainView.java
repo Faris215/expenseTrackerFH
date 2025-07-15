@@ -58,15 +58,6 @@ public class MainView extends VerticalLayout {
                     recurrenceType
             );
 
-
-//            Expense expense = new Expense(
-//                    amountField.getValue(),
-//                    categoryField.getValue(),
-//                    descriptionField.getValue(),
-//                    datePicker.getValue(),
-//                    recurringCombo.getValue()
-//            );
-
             if (selectedExpense != null) {
                 expense.setId(selectedExpense.getId());
                 expenseService.updateExpense(expense);
@@ -86,14 +77,10 @@ public class MainView extends VerticalLayout {
             }
         });
 
-        Button balanceButton = new Button("Show Monthly Balance", e -> showMonthlyBalance());
-
         HorizontalLayout formLayout = new HorizontalLayout(
                 amountField, categoryField, descriptionField, datePicker,
-                recurringCombo, addOrUpdateButton, deleteButton, balanceButton);
+                recurringCombo, addOrUpdateButton, deleteButton);
         formLayout.setWidthFull();
-
-       // expenseGrid.setColumns("amount", "category", "description", "date", "recurring");
 
 
         expenseGrid.setColumns("amount", "category", "description", "date", "recurring", "recurrenceType");
@@ -129,29 +116,13 @@ public class MainView extends VerticalLayout {
         selectedExpense = null;
     }
 
-    private void showMonthlyBalance() {
-        LocalDate now = LocalDate.now().withDayOfMonth(1);
-        ExpenseDAO dao = new ExpenseDAO(new DBConnect().getConnection());
-        Income income = dao.getIncomeForMonth(now);
-
-        double incomeAmount = income != null ? income.getAmount() : 0;
-        double totalExpenses = dao.getAllExpenses().stream()
-                .filter(e -> e.getDate().getMonth().equals(now.getMonth()))
-                .mapToDouble(Expense::getAmount)
-                .sum();
-
-        double balance = incomeAmount - totalExpenses;
-
-        Notification.show("Balance for " + now.getMonth() + ": €" + balance);
-    }
-
     public static class Expense {
         private Integer id;
         private Double amount;
         private String category;
         private String description;
         private LocalDate date;
-        private boolean recurring; // "None", "Monthly", "Annually"
+        private boolean recurring;
         private String recurrenceType;
 
         public Expense() {}

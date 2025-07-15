@@ -24,33 +24,47 @@ public class IncomeExpenseChartView extends VerticalLayout {
         ExpenseDAO dao = new ExpenseDAO(db.getConnection());
 
         List<MainView.Expense> allExpenses = dao.getAllExpenses();
+        List<Income> allIncome = dao.getAllIncome();
 
-        // Group expenses by month
-        Map<String, Double> expensesByMonth = allExpenses.stream()
-                .collect(Collectors.groupingBy(
-                        e -> e.getDate().withDayOfMonth(1).toString(),
-                        Collectors.summingDouble(MainView.Expense::getAmount)
-                ));
+        TreeSet<LocalDate> months = new TreeSet<>();
 
-        // Get income from DB
-        Map<String, Double> incomeByMonth = dao.getAllIncome().stream()
-                .collect(Collectors.toMap(
-                        i -> i.getMonth().withDayOfMonth(1).toString(),
-                        Income::getAmount
-                ));
+        Map<LocalDate, Double> incomeByMonth = new HashMap<>();
+        for (Income income : allIncome) {
+            LocalDate month = income.getMonth().withDayOfMonth(1);
+            months.add(month);
+            incomeByMonth.put(month, incomeByMonth.getOrDefault(month, 0.0) + income.getAmount());
+        }
 
-        Set<String> allMonths = new TreeSet<>(incomeByMonth.keySet());
-        allMonths.addAll(expensesByMonth.keySet());
+        Map<LocalDate, Double> expensesByMonth = new HashMap<>();
+        for (MainView.Expense expense : allExpenses) {
+            LocalDate startMonth = expense.getDate().withDayOfMonth(1);
 
-        List<String> categories = allMonths.stream()
+            if (expense.getRecurring()) {
+                for (int i = 0; i < 36; i++) {
+                    LocalDate recurringMonth = "Monthly".equals(expense.getRecurrenceType())
+                            ? startMonth.plusMonths(i)
+                            : startMonth.plusYears(i);
+
+                    if (recurringMonth.isAfter(LocalDate.now().plusMonths(12))) break;
+
+                    months.add(recurringMonth);
+                    expensesByMonth.put(recurringMonth, expensesByMonth.getOrDefault(recurringMonth, 0.0) + expense.getAmount());
+                }
+            } else {
+                months.add(startMonth);
+                expensesByMonth.put(startMonth, expensesByMonth.getOrDefault(startMonth, 0.0) + expense.getAmount());
+            }
+        }
+
+        List<String> categories = months.stream()
                 .sorted()
-                .map(month -> LocalDate.parse(month).getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                .map(month -> month.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + " " + month.getYear())
                 .toList();
 
         ListSeries incomeSeries = new ListSeries("Income");
         ListSeries expenseSeries = new ListSeries("Expenses");
 
-        for (String month : allMonths) {
+        for (LocalDate month : months) {
             incomeSeries.addData(incomeByMonth.getOrDefault(month, 0.0));
             expenseSeries.addData(expensesByMonth.getOrDefault(month, 0.0));
         }
@@ -69,7 +83,7 @@ public class IncomeExpenseChartView extends VerticalLayout {
 
         conf.addSeries(incomeSeries);
         conf.addSeries(expenseSeries);
-
+        conf.setTooltip(new Tooltip(true));
         chart.getConfiguration().getChart().setStyledMode(true);
 
         add(chart);
