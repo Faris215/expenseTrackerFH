@@ -1,6 +1,7 @@
 package org.vaadin.example;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Paragraph;
@@ -31,6 +32,11 @@ public class MainView extends VerticalLayout {
         TextField descriptionField = new TextField("Description");
         DatePicker datePicker = new DatePicker("Date");
 
+        // New ComboBox for recurring setting
+        ComboBox<String> recurringCombo = new ComboBox<>("Recurring");
+        recurringCombo.setItems("None", "Monthly", "Annually");
+        recurringCombo.setValue("None");
+
         Button addOrUpdateButton = new Button("Save");
         Button deleteButton = new Button("Delete");
 
@@ -39,13 +45,27 @@ public class MainView extends VerticalLayout {
                 Notification.show("Please fill in amount and category");
                 return;
             }
+            String recurrenceValue = recurringCombo.getValue();
+            boolean isRecurring = !"None".equals(recurrenceValue);
+            String recurrenceType = isRecurring ? recurrenceValue : null;
 
             Expense expense = new Expense(
                     amountField.getValue(),
                     categoryField.getValue(),
                     descriptionField.getValue(),
-                    datePicker.getValue()
+                    datePicker.getValue(),
+                    isRecurring,
+                    recurrenceType
             );
+
+
+//            Expense expense = new Expense(
+//                    amountField.getValue(),
+//                    categoryField.getValue(),
+//                    descriptionField.getValue(),
+//                    datePicker.getValue(),
+//                    recurringCombo.getValue()
+//            );
 
             if (selectedExpense != null) {
                 expense.setId(selectedExpense.getId());
@@ -55,23 +75,28 @@ public class MainView extends VerticalLayout {
             }
 
             updateGrid();
-            clearForm(amountField, categoryField, descriptionField, datePicker);
+            clearForm(amountField, categoryField, descriptionField, datePicker, recurringCombo);
         });
 
         deleteButton.addClickListener(e -> {
             if (selectedExpense != null) {
                 expenseService.deleteExpense(selectedExpense.getId());
                 updateGrid();
-                clearForm(amountField, categoryField, descriptionField, datePicker);
+                clearForm(amountField, categoryField, descriptionField, datePicker, recurringCombo);
             }
         });
 
         Button balanceButton = new Button("Show Monthly Balance", e -> showMonthlyBalance());
 
-        HorizontalLayout formLayout = new HorizontalLayout(amountField, categoryField, descriptionField, datePicker, addOrUpdateButton, deleteButton, balanceButton);
+        HorizontalLayout formLayout = new HorizontalLayout(
+                amountField, categoryField, descriptionField, datePicker,
+                recurringCombo, addOrUpdateButton, deleteButton, balanceButton);
         formLayout.setWidthFull();
 
-        expenseGrid.setColumns("amount", "category", "description", "date");
+       // expenseGrid.setColumns("amount", "category", "description", "date", "recurring");
+
+
+        expenseGrid.setColumns("amount", "category", "description", "date", "recurring", "recurrenceType");
         expenseGrid.setItems(expenseService.getAllExpenses());
         expenseGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         expenseGrid.asSingleSelect().addValueChangeListener(e -> {
@@ -81,11 +106,10 @@ public class MainView extends VerticalLayout {
                 categoryField.setValue(selectedExpense.getCategory());
                 descriptionField.setValue(selectedExpense.getDescription() == null ? "" : selectedExpense.getDescription());
                 datePicker.setValue(selectedExpense.getDate());
+                String type = selectedExpense.getRecurrenceType();
+                recurringCombo.setValue(type != null ? type : "None");
             }
         });
-
-
-
 
         add(formLayout, expenseGrid);
     }
@@ -96,11 +120,12 @@ public class MainView extends VerticalLayout {
         selectedExpense = null;
     }
 
-    private void clearForm(NumberField amount, TextField category, TextField desc, DatePicker date) {
+    private void clearForm(NumberField amount, TextField category, TextField desc, DatePicker date, ComboBox<String> recurring) {
         amount.clear();
         category.clear();
         desc.clear();
         date.setValue(LocalDate.now());
+        recurring.setValue("None");
         selectedExpense = null;
     }
 
@@ -112,7 +137,7 @@ public class MainView extends VerticalLayout {
         double incomeAmount = income != null ? income.getAmount() : 0;
         double totalExpenses = dao.getAllExpenses().stream()
                 .filter(e -> e.getDate().getMonth().equals(now.getMonth()))
-                .mapToDouble(MainView.Expense::getAmount)
+                .mapToDouble(Expense::getAmount)
                 .sum();
 
         double balance = incomeAmount - totalExpenses;
@@ -120,22 +145,26 @@ public class MainView extends VerticalLayout {
         Notification.show("Balance for " + now.getMonth() + ": €" + balance);
     }
 
-
     public static class Expense {
         private Integer id;
         private Double amount;
         private String category;
         private String description;
         private LocalDate date;
+        private boolean recurring; // "None", "Monthly", "Annually"
+        private String recurrenceType;
 
         public Expense() {}
 
-        public Expense(Double amount, String category, String description, LocalDate date) {
+        public Expense(Double amount, String category, String description, LocalDate date, boolean recurring, String recurrenceType) {
             this.amount = amount;
             this.category = category;
             this.description = description;
             this.date = date;
+            this.recurring = recurring;
+            this.recurrenceType = recurrenceType;
         }
+
 
         public Integer getId() { return id; }
         public void setId(Integer id) { this.id = id; }
@@ -151,5 +180,13 @@ public class MainView extends VerticalLayout {
 
         public LocalDate getDate() { return date; }
         public void setDate(LocalDate date) { this.date = date; }
+
+        public boolean getRecurring() { return recurring; }
+        public void setRecurring(boolean recurring) { this.recurring = recurring; }
+
+        public String getRecurrenceType() { return recurrenceType; }
+        public void setRecurrenceType(String recurrenceType) { this.recurrenceType = recurrenceType; }
+
+
     }
 }

@@ -22,11 +22,18 @@ public class MainLayout extends AppLayout {
 
     private void createDrawer() {
         RouterLink mainLink = new RouterLink("Expenses", MainView.class);
-        RouterLink chartLink = new RouterLink("Chart", ChartView.class);
+        RouterLink chartLink = new RouterLink("Pie Chart", ChartView.class);
+        RouterLink balanceLink = new RouterLink("Balance Chart", BalanceChartView.class); // <-- Add this
+        RouterLink incomeLink = new RouterLink("Monthly Income", MonthlyIncomeView.class);
+        RouterLink compareLink = new RouterLink("Income vs Expenses", IncomeExpenseChartView.class);
 
-        VerticalLayout menuLayout = new VerticalLayout(mainLink, chartLink);
+
+
+        VerticalLayout menuLayout = new VerticalLayout(mainLink, chartLink, incomeLink, compareLink, balanceLink); // <-- Include link
         menuLayout.setPadding(true);
 
         addToDrawer(menuLayout);
     }
+
+
 }
