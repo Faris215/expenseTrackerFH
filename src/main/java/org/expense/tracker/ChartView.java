@@ -24,6 +24,7 @@ public class ChartView extends VerticalLayout {
 
         Chart chart = new Chart(ChartType.PIE);
         Configuration conf = chart.getConfiguration();
+        chart.getConfiguration().getChart().setStyledMode(true);
         conf.setTitle("Expenses by Category");
 
         PlotOptionsPie plotOptions = new PlotOptionsPie();

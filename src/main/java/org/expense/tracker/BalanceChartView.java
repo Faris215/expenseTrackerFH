@@ -83,6 +83,8 @@ public class BalanceChartView extends VerticalLayout {
         conf.addSeries(new ListSeries("Balance", balanceData.toArray(new Number[0])));
         conf.setTooltip(new Tooltip(true));
         chart.setSizeFull();
+        chart.getConfiguration().getChart().setStyledMode(true);
+
 
         add(chart);
     }

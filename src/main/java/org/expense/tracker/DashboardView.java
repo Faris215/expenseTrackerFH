@@ -114,6 +114,7 @@ public class DashboardView extends VerticalLayout {
         Chart chart = new Chart(ChartType.COLUMN);
         chart.setSizeFull();
         Configuration conf = chart.getConfiguration();
+        chart.getConfiguration().getChart().setStyledMode(true);
         conf.setTitle("Monthly Income vs Expenses vs Balance");
 
         XAxis xAxis = new XAxis();
