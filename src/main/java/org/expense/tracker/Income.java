@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import java.time.LocalDate;
 

@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -16,7 +16,7 @@ import com.vaadin.flow.router.Route;
 import java.time.LocalDate;
 import java.util.List;
 
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "Expenses", layout = MainLayout.class)
 @PageTitle("Expenses")
 public class MainView extends VerticalLayout {
 

@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.router.PageTitle;

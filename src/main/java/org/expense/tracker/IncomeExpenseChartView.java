@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
@@ -9,7 +9,6 @@ import com.vaadin.flow.router.Route;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Route(value = "compare", layout = MainLayout.class)
 @PageTitle("Income vs Expenses")

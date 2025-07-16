@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.H1;
@@ -21,7 +21,8 @@ public class MainLayout extends AppLayout {
     }
 
     private void createDrawer() {
-        RouterLink mainLink = new RouterLink("Expenses", MainView.class);
+        RouterLink mainLink = new RouterLink("Dashboard", DashboardView.class);
+        RouterLink expensesLink = new RouterLink("Expenses", MainView.class);
         RouterLink chartLink = new RouterLink("Pie Chart", ChartView.class);
         RouterLink balanceLink = new RouterLink("Balance Chart", BalanceChartView.class); // <-- Add this
         RouterLink incomeLink = new RouterLink("Monthly Income", MonthlyIncomeView.class);
@@ -29,7 +30,7 @@ public class MainLayout extends AppLayout {
 
 
 
-        VerticalLayout menuLayout = new VerticalLayout(mainLink, chartLink, incomeLink, compareLink, balanceLink); // <-- Include link
+        VerticalLayout menuLayout = new VerticalLayout(mainLink, expensesLink, chartLink, incomeLink, compareLink, balanceLink); // <-- Include link
         menuLayout.setPadding(true);
 
         addToDrawer(menuLayout);

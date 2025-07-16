@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.expense.tracker;
 
 import java.sql.*;
 
@@ -10,7 +10,6 @@ public class DBConnect {
         try {
             String url = "jdbc:postgresql://localhost:5432/" + dbName;
             connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Connected to DB!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
