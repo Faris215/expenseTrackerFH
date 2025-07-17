@@ -32,7 +32,6 @@ public class MainView extends VerticalLayout {
         TextField descriptionField = new TextField("Description");
         DatePicker datePicker = new DatePicker("Date");
 
-        // New ComboBox for recurring setting
         ComboBox<String> recurringCombo = new ComboBox<>("Recurring");
         recurringCombo.setItems("None", "Monthly", "Annually");
         recurringCombo.setValue("None");

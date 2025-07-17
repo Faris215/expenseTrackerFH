@@ -20,7 +20,7 @@ public class ExpenseDAO {
             stmt.setString(2, expense.getCategory());
             stmt.setString(3, expense.getDescription());
             stmt.setDate(4, Date.valueOf(expense.getDate()));
-            stmt.setBoolean(5, expense.getRecurring()); // Corrected
+            stmt.setBoolean(5, expense.getRecurring());
             stmt.setString(6, expense.getRecurrenceType());
 
             ResultSet rs = stmt.executeQuery();
@@ -41,7 +41,7 @@ public class ExpenseDAO {
             stmt.setString(2, expense.getCategory());
             stmt.setString(3, expense.getDescription());
             stmt.setDate(4, Date.valueOf(expense.getDate()));
-            stmt.setBoolean(5, expense.getRecurring()); // Correct type
+            stmt.setBoolean(5, expense.getRecurring());
             stmt.setString(6, expense.getRecurrenceType());
             stmt.setInt(7, expense.getId());
             stmt.executeUpdate();

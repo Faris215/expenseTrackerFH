@@ -40,7 +40,6 @@ public class MonthlyIncomeView extends VerticalLayout {
         monthPicker = new DatePicker("Month");
         monthPicker.setInitialPosition(LocalDate.now().withDayOfMonth(1));
 
-        // Save button (standalone for new or updated values)
         Button saveButton = new Button("Save", event -> {
             if (amountField.isEmpty() || monthPicker.isEmpty()) {
                 Notification.show("Fill in both month and amount");
@@ -55,7 +54,6 @@ public class MonthlyIncomeView extends VerticalLayout {
 
         add(new HorizontalLayout(monthPicker, amountField), saveButton);
 
-        // Grid setup
         grid = new Grid<>(Income.class, false);
         grid.addColumn(income -> income.getMonth().getMonth() + " " + income.getMonth().getYear()).setHeader("Month");
         grid.addColumn(Income::getAmount).setHeader("Amount (€)");

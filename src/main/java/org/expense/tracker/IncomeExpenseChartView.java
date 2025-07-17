@@ -59,7 +59,6 @@ public class IncomeExpenseChartView extends VerticalLayout {
 
         add(chart);
 
-        // Load initially
         updateChart("Past 12 months");
 
         filterComboBox.addValueChangeListener(event -> {
@@ -69,25 +68,21 @@ public class IncomeExpenseChartView extends VerticalLayout {
     }
 
     private void updateChart(String filter) {
-        // Remove existing chart cleanly
+
         if (currentChart != null) {
             remove(currentChart);
         }
 
-        // Create a new chart instance each time
         Chart newChart = new Chart(ChartType.COLUMN);
         Configuration conf = newChart.getConfiguration();
 
-        // Set up the Y-axis
         YAxis y = new YAxis();
         y.setTitle("Amount (€)");
         conf.addyAxis(y);
 
-        // Enable tooltips
         conf.setTooltip(new Tooltip(true));
         conf.getChart().setStyledMode(true);
 
-        // === Data Preparation ===
         TreeSet<LocalDate> months = new TreeSet<>();
         Map<LocalDate, Double> incomeByMonth = new HashMap<>();
         Map<LocalDate, Double> expensesByMonth = new HashMap<>();
@@ -154,12 +149,10 @@ public class IncomeExpenseChartView extends VerticalLayout {
                 .map(month -> month.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + " " + month.getYear())
                 .toList();
 
-        // Configure X-axis with filtered categories
         XAxis x = new XAxis();
         x.setCategories(categories.toArray(new String[0]));
         conf.addxAxis(x);
 
-        // Prepare series
         ListSeries incomeSeries = new ListSeries("Income");
         ListSeries expenseSeries = new ListSeries("Expenses");
 
@@ -171,13 +164,8 @@ public class IncomeExpenseChartView extends VerticalLayout {
         conf.addSeries(incomeSeries);
         conf.addSeries(expenseSeries);
 
-        // Track and display the new chart
         currentChart = newChart;
         add(currentChart);
     }
-
-
-
-
 
 }

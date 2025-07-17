@@ -32,7 +32,6 @@ public class ChartView extends VerticalLayout {
         plotOptions.setCursor(Cursor.POINTER);
         plotOptions.setShowInLegend(true);
 
-        // Show % labels
         DataLabels dataLabels = new DataLabels();
         dataLabels.setEnabled(true);
         dataLabels.setFormat("{point.name}: {point.percentage:.1f} %");

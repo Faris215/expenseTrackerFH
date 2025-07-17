@@ -30,7 +30,7 @@ public class MainLayout extends AppLayout {
 
 
 
-        VerticalLayout menuLayout = new VerticalLayout(mainLink, expensesLink, chartLink, incomeLink, compareLink, balanceLink); // <-- Include link
+        VerticalLayout menuLayout = new VerticalLayout(mainLink, expensesLink, chartLink, incomeLink, compareLink, balanceLink);
         menuLayout.setPadding(true);
 
         addToDrawer(menuLayout);

@@ -36,7 +36,6 @@ public class DashboardView extends VerticalLayout {
             last12Months.add(now.minusMonths(i));
         }
 
-        // Stats
         double monthlyIncome = getIncomeForMonth(incomes, now);
         double monthlyExpenses = getExpensesForMonth(expenses, now);
         double totalIncome = incomes.stream().mapToDouble(Income::getAmount).sum();
@@ -50,7 +49,6 @@ public class DashboardView extends VerticalLayout {
                 .map(Map.Entry::getKey)
                 .orElse("None");
 
-        // Board Cards
         Board board = new Board();
         Row row1 = board.addRow(
                 createStatCard("Current Balance", "€" + round(balance)),
