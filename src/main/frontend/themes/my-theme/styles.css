@@ -1,19 +1,260 @@
 /*
-   CSS styling examples for the Vaadin app.
-
-   Visit https://vaadin.com/docs/styling/application-theme/ for more information.
+   Enhanced CSS styling for the Vaadin Expense Tracker app.
+   Modern design with improved visual appeal and animations.
 */
 
-/* Example: CSS class name to center align the content . */
+/* Global styles */
+html {
+  --lumo-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --lumo-border-radius-m: 8px;
+  --lumo-border-radius-l: 12px;
+  --lumo-space-xs: 0.25rem;
+  --lumo-space-s: 0.5rem;
+  --lumo-space-m: 1rem;
+  --lumo-space-l: 1.5rem;
+  --lumo-space-xl: 2rem;
+}
+
+/* Custom utility classes */
 .centered-content {
   margin: 0 auto;
-  max-width: 250px;
+  max-width: 1200px;
+  padding: var(--lumo-space-m);
 }
 
-/* Example: the style is applied only to the textfields which have the `bordered` class name. */
-vaadin-text-field.bordered::part(input-field) {
+.card {
+  background: var(--lumo-base-color);
+  border: 1px solid var(--lumo-contrast-10pct);
+  border-radius: var(--lumo-border-radius-l);
+  padding: var(--lumo-space-l);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card {
+  background: linear-gradient(135deg, var(--lumo-base-color) 0%, var(--lumo-contrast-5pct) 100%);
+  border: 1px solid var(--lumo-contrast-10pct);
+  border-radius: var(--lumo-border-radius-l);
+  padding: var(--lumo-space-l);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced form styling */
+vaadin-text-field,
+vaadin-number-field,
+vaadin-date-picker,
+vaadin-combo-box {
+  --lumo-border-radius: var(--lumo-border-radius-m);
+  margin-bottom: var(--lumo-space-s);
+}
+
+vaadin-text-field.bordered::part(input-field),
+vaadin-number-field.bordered::part(input-field),
+vaadin-date-picker.bordered::part(input-field),
+vaadin-combo-box.bordered::part(input-field) {
   box-shadow: inset 0 0 0 1px var(--lumo-contrast-30pct);
   background-color: var(--lumo-base-color);
+  border-radius: var(--lumo-border-radius-m);
+  transition: all 0.2s ease;
 }
 
+vaadin-text-field:focus-within::part(input-field),
+vaadin-number-field:focus-within::part(input-field),
+vaadin-date-picker:focus-within::part(input-field),
+vaadin-combo-box:focus-within::part(input-field) {
+  box-shadow: 0 0 0 2px var(--lumo-primary-color-50pct);
+  transform: scale(1.02);
+}
 
+/* Enhanced button styling */
+vaadin-button {
+  border-radius: var(--lumo-border-radius-m);
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+vaadin-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: width 0.3s ease, height 0.3s ease;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+vaadin-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+vaadin-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+vaadin-button:active {
+  transform: translateY(0);
+}
+
+/* Enhanced grid styling */
+vaadin-grid {
+  border-radius: var(--lumo-border-radius-l);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+vaadin-grid::part(header-cell) {
+  background: var(--lumo-contrast-5pct);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+vaadin-grid::part(row):hover {
+  background: var(--lumo-primary-color-10pct);
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
+
+/* Chart container styling */
+.chart-container {
+  background: var(--lumo-base-color);
+  border-radius: var(--lumo-border-radius-l);
+  padding: var(--lumo-space-l);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--lumo-space-l);
+}
+
+/* Navigation improvements */
+vaadin-app-layout::part(drawer) {
+  background: var(--lumo-contrast-5pct);
+  backdrop-filter: blur(10px);
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  animation: pulse 2s infinite;
+}
+
+/* Success/Error states */
+.success-text {
+  color: var(--lumo-success-color);
+  font-weight: 600;
+}
+
+.error-text {
+  color: var(--lumo-error-color);
+  font-weight: 600;
+}
+
+.warning-text {
+  color: var(--lumo-warning-color);
+  font-weight: 600;
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .centered-content {
+    padding: var(--lumo-space-s);
+  }
+
+  .card {
+    padding: var(--lumo-space-m);
+  }
+
+  .stat-card {
+    padding: var(--lumo-space-m);
+  }
+}
+
+/* Dark mode enhancements */
+html[theme~="dark"] {
+  --lumo-base-color: #1a1a1a;
+  --lumo-tint-5pct: rgba(255, 255, 255, 0.05);
+  --lumo-tint-10pct: rgba(255, 255, 255, 0.1);
+  --lumo-contrast-5pct: rgba(255, 255, 255, 0.05);
+  --lumo-contrast-10pct: rgba(255, 255, 255, 0.1);
+}
+
+html[theme~="dark"] .card {
+  background: linear-gradient(135deg, var(--lumo-base-color) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid var(--lumo-contrast-10pct);
+}
+
+html[theme~="dark"] .stat-card {
+  background: linear-gradient(135deg, var(--lumo-base-color) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Notification improvements */
+vaadin-notification-card {
+  border-radius: var(--lumo-border-radius-l);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}

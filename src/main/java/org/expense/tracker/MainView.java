@@ -1,11 +1,16 @@
 package org.expense.tracker;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -20,30 +25,109 @@ import java.util.List;
 @PageTitle("Expenses")
 public class MainView extends VerticalLayout {
 
-    private final Grid<Expense> expenseGrid = new Grid<>(Expense.class);
+    private final Grid<Expense> expenseGrid = new Grid<>(Expense.class, false);
     private final ExpenseService expenseService = new ExpenseService();
     private Expense selectedExpense = null;
 
+    // Form fields as instance variables
+    private NumberField amountField;
+    private TextField categoryField;
+    private TextField descriptionField;
+    private DatePicker datePicker;
+    private ComboBox<String> recurringCombo;
+
     public MainView() {
-        NumberField amountField = new NumberField("Amount");
-        amountField.setPrefixComponent(new Paragraph("€"));
+        setSizeFull();
+        setPadding(true);
+        setSpacing(true);
+        getStyle().set("background", "var(--lumo-contrast-5pct)");
 
-        TextField categoryField = new TextField("Category");
-        TextField descriptionField = new TextField("Description");
-        DatePicker datePicker = new DatePicker("Date");
+        // Header
+        H2 title = new H2("💸 Expense Management");
+        title.getStyle()
+                .set("margin", "0 0 1.5rem 0")
+                .set("color", "var(--lumo-primary-text-color)")
+                .set("font-weight", "700")
+                .set("font-size", "2rem");
 
-        ComboBox<String> recurringCombo = new ComboBox<>("Recurring");
+        // Form card
+        VerticalLayout formCard = createFormCard();
+
+        // Grid card
+        VerticalLayout gridCard = createGridCard();
+
+        add(title, formCard, gridCard);
+    }
+
+    private VerticalLayout createFormCard() {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+                .set("background", "var(--lumo-base-color)")
+                .set("border", "1px solid var(--lumo-contrast-10pct)")
+                .set("border-radius", "12px")
+                .set("padding", "1.5rem")
+                .set("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
+                .set("margin-bottom", "1.5rem");
+
+        H2 cardTitle = new H2("Add/Edit Expense");
+        cardTitle.getStyle()
+                .set("margin", "0 0 1rem 0")
+                .set("font-size", "1.3rem")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        // Form fields
+        amountField = new NumberField("Amount");
+        amountField.setPrefixComponent(new Span("€"));
+        amountField.setPlaceholder("0.00");
+        amountField.addClassName("bordered");
+
+        categoryField = new TextField("Category");
+        categoryField.setPlaceholder("e.g., Food, Transport, Entertainment");
+        categoryField.addClassName("bordered");
+
+        descriptionField = new TextField("Description");
+        descriptionField.setPlaceholder("Optional description");
+        descriptionField.addClassName("bordered");
+
+        datePicker = new DatePicker("Date");
+        datePicker.setValue(LocalDate.now());
+        datePicker.addClassName("bordered");
+
+        recurringCombo = new ComboBox<>("Recurring");
         recurringCombo.setItems("None", "Monthly", "Annually");
         recurringCombo.setValue("None");
+        recurringCombo.addClassName("bordered");
 
-        Button addOrUpdateButton = new Button("Save");
+        // Buttons
+        Button addOrUpdateButton = new Button("Save Expense");
+        addOrUpdateButton.setIcon(VaadinIcon.CHECK.create());
+        addOrUpdateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addOrUpdateButton.getStyle()
+                .set("border-radius", "8px")
+                .set("font-weight", "600");
+
         Button deleteButton = new Button("Delete");
+        deleteButton.setIcon(VaadinIcon.TRASH.create());
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        deleteButton.getStyle()
+                .set("border-radius", "8px")
+                .set("font-weight", "600");
 
+        Button clearButton = new Button("Clear Form");
+        clearButton.setIcon(VaadinIcon.REFRESH.create());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        clearButton.getStyle()
+                .set("border-radius", "8px")
+                .set("font-weight", "600");
+
+        // Event handlers
         addOrUpdateButton.addClickListener(e -> {
             if (amountField.isEmpty() || categoryField.isEmpty()) {
-                Notification.show("Please fill in amount and category");
+                Notification notification = Notification.show("Please fill in amount and category");
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
+
             String recurrenceValue = recurringCombo.getValue();
             boolean isRecurring = !"None".equals(recurrenceValue);
             String recurrenceType = isRecurring ? recurrenceValue : null;
@@ -60,44 +144,111 @@ public class MainView extends VerticalLayout {
             if (selectedExpense != null) {
                 expense.setId(selectedExpense.getId());
                 expenseService.updateExpense(expense);
+                Notification notification = Notification.show("Expense updated successfully!");
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 expenseService.addExpense(expense);
+                Notification notification = Notification.show("Expense added successfully!");
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             }
 
             updateGrid();
-            clearForm(amountField, categoryField, descriptionField, datePicker, recurringCombo);
+            clearForm();
         });
 
         deleteButton.addClickListener(e -> {
             if (selectedExpense != null) {
                 expenseService.deleteExpense(selectedExpense.getId());
                 updateGrid();
-                clearForm(amountField, categoryField, descriptionField, datePicker, recurringCombo);
+                clearForm();
+                Notification notification = Notification.show("Expense deleted successfully!");
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                Notification notification = Notification.show("Please select an expense to delete");
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
 
-        HorizontalLayout formLayout = new HorizontalLayout(
-                amountField, categoryField, descriptionField, datePicker,
-                recurringCombo, addOrUpdateButton, deleteButton);
-        formLayout.setWidthFull();
+        clearButton.addClickListener(e -> {
+            clearForm();
+        });
 
+        // Layout
+        HorizontalLayout row1 = new HorizontalLayout(amountField, categoryField, descriptionField);
+        row1.setWidthFull();
+        row1.setFlexGrow(1, amountField, categoryField, descriptionField);
 
-        expenseGrid.setColumns("amount", "category", "description", "date", "recurring", "recurrenceType");
+        HorizontalLayout row2 = new HorizontalLayout(datePicker, recurringCombo);
+        row2.setWidthFull();
+        row2.setFlexGrow(1, datePicker, recurringCombo);
+
+        HorizontalLayout buttonLayout = new HorizontalLayout(addOrUpdateButton, deleteButton, clearButton);
+        buttonLayout.setJustifyContentMode(HorizontalLayout.JustifyContentMode.END);
+        buttonLayout.setSpacing(true);
+
+        card.add(cardTitle, row1, row2, buttonLayout);
+        return card;
+    }
+
+    private VerticalLayout createGridCard() {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+                .set("background", "var(--lumo-base-color)")
+                .set("border", "1px solid var(--lumo-contrast-10pct)")
+                .set("border-radius", "12px")
+                .set("padding", "1.5rem")
+                .set("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
+                .set("flex-grow", "1");
+
+        H2 cardTitle = new H2("📋 Expense History");
+        cardTitle.getStyle()
+                .set("margin", "0 0 1rem 0")
+                .set("font-size", "1.3rem")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        // Configure grid
+        expenseGrid.addColumn(Expense::getAmount)
+                .setHeader("Amount (€)")
+                .setWidth("120px")
+                .setFlexGrow(0);
+
+        expenseGrid.addColumn(Expense::getCategory)
+                .setHeader("Category")
+                .setWidth("150px")
+                .setFlexGrow(0);
+
+        expenseGrid.addColumn(Expense::getDescription)
+                .setHeader("Description")
+                .setFlexGrow(1);
+
+        expenseGrid.addColumn(Expense::getDate)
+                .setHeader("Date")
+                .setWidth("120px")
+                .setFlexGrow(0);
+
+        expenseGrid.addColumn(expense -> expense.getRecurring() ? "Yes" : "No")
+                .setHeader("Recurring")
+                .setWidth("100px")
+                .setFlexGrow(0);
+
+        expenseGrid.addColumn(expense -> expense.getRecurrenceType() != null ? expense.getRecurrenceType() : "-")
+                .setHeader("Type")
+                .setWidth("100px")
+                .setFlexGrow(0);
+
         expenseGrid.setItems(expenseService.getAllExpenses());
         expenseGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        expenseGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COLUMN_BORDERS);
+        expenseGrid.setHeight("400px"); // Set a fixed height instead
+
+        // Selection handler - we need to pass the form fields to populate them
         expenseGrid.asSingleSelect().addValueChangeListener(e -> {
             selectedExpense = e.getValue();
-            if (selectedExpense != null) {
-                amountField.setValue(selectedExpense.getAmount());
-                categoryField.setValue(selectedExpense.getCategory());
-                descriptionField.setValue(selectedExpense.getDescription() == null ? "" : selectedExpense.getDescription());
-                datePicker.setValue(selectedExpense.getDate());
-                String type = selectedExpense.getRecurrenceType();
-                recurringCombo.setValue(type != null ? type : "None");
-            }
+            populateFormFields(selectedExpense);
         });
 
-        add(formLayout, expenseGrid);
+        card.add(cardTitle, expenseGrid);
+        return card;
     }
 
     private void updateGrid() {
@@ -106,13 +257,27 @@ public class MainView extends VerticalLayout {
         selectedExpense = null;
     }
 
-    private void clearForm(NumberField amount, TextField category, TextField desc, DatePicker date, ComboBox<String> recurring) {
-        amount.clear();
-        category.clear();
-        desc.clear();
-        date.setValue(LocalDate.now());
-        recurring.setValue("None");
+    private void clearForm() {
+        amountField.clear();
+        categoryField.clear();
+        descriptionField.clear();
+        datePicker.setValue(LocalDate.now());
+        recurringCombo.setValue("None");
         selectedExpense = null;
+        expenseGrid.deselectAll();
+    }
+
+    private void populateFormFields(Expense expense) {
+        if (expense != null) {
+            amountField.setValue(expense.getAmount());
+            categoryField.setValue(expense.getCategory());
+            descriptionField.setValue(expense.getDescription() != null ? expense.getDescription() : "");
+            datePicker.setValue(expense.getDate());
+            String type = expense.getRecurrenceType();
+            recurringCombo.setValue(type != null ? type : "None");
+        } else {
+            clearForm();
+        }
     }
 
     public static class Expense {
@@ -135,7 +300,6 @@ public class MainView extends VerticalLayout {
             this.recurrenceType = recurrenceType;
         }
 
-
         public Integer getId() { return id; }
         public void setId(Integer id) { this.id = id; }
 
@@ -156,7 +320,5 @@ public class MainView extends VerticalLayout {
 
         public String getRecurrenceType() { return recurrenceType; }
         public void setRecurrenceType(String recurrenceType) { this.recurrenceType = recurrenceType; }
-
-
     }
 }

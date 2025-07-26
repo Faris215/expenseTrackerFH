@@ -1,7 +1,10 @@
 package org.expense.tracker;
 
+import org.expense.tracker.BankBalance;
+
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +14,22 @@ public class ExpenseDAO {
 
     public ExpenseDAO(Connection connection) {
         this.connection = connection;
+        createBankBalanceTableIfNotExists();
+    }
+
+    private void createBankBalanceTableIfNotExists() {
+        String sql = """
+            CREATE TABLE IF NOT EXISTS bank_balance (
+                id SERIAL PRIMARY KEY,
+                amount DECIMAL(10,2) NOT NULL,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """;
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public int saveExpense(MainView.Expense expense) {
@@ -33,7 +52,6 @@ public class ExpenseDAO {
         return -1;
     }
 
-
     public void updateExpense(MainView.Expense expense) {
         String sql = "UPDATE expenses SET amount = ?, category = ?, description = ?, date = ?, recurring = ?, recurrence_type = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -49,7 +67,6 @@ public class ExpenseDAO {
             e.printStackTrace();
         }
     }
-
 
     public void deleteExpense(int id) {
         String sql = "DELETE FROM expenses WHERE id = ?";
@@ -86,7 +103,6 @@ public class ExpenseDAO {
         }
         return expenses;
     }
-
 
     public void saveIncome(Income income) {
         String sql = "INSERT INTO income (amount, month) VALUES (?, ?)";
@@ -151,6 +167,61 @@ public class ExpenseDAO {
             } else {
                 saveIncome(income);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Bank Balance methods
+    public void saveOrUpdateBankBalance(BankBalance bankBalance) {
+        String checkSql = "SELECT COUNT(*) FROM bank_balance";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            ResultSet rs = checkStmt.executeQuery();
+            rs.next();
+            int count = rs.getInt(1);
+
+            if (count > 0) {
+                String updateSql = "UPDATE bank_balance SET amount = ?, last_updated = ? WHERE id = (SELECT MIN(id) FROM bank_balance)";
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                    updateStmt.setDouble(1, bankBalance.getAmount());
+                    updateStmt.setTimestamp(2, Timestamp.valueOf(bankBalance.getLastUpdated()));
+                    updateStmt.executeUpdate();
+                }
+            } else {
+                String insertSql = "INSERT INTO bank_balance (amount, last_updated) VALUES (?, ?)";
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                    insertStmt.setDouble(1, bankBalance.getAmount());
+                    insertStmt.setTimestamp(2, Timestamp.valueOf(bankBalance.getLastUpdated()));
+                    insertStmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public BankBalance getCurrentBankBalance() {
+        String sql = "SELECT * FROM bank_balance ORDER BY last_updated DESC LIMIT 1";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                BankBalance bankBalance = new BankBalance();
+                bankBalance.setId(rs.getInt("id"));
+                bankBalance.setAmount(rs.getDouble("amount"));
+                bankBalance.setLastUpdated(rs.getTimestamp("last_updated").toLocalDateTime());
+                return bankBalance;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void deleteIncome(int id) {
+        String sql = "DELETE FROM income WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
