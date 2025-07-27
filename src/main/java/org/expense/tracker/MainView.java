@@ -7,6 +7,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -19,7 +20,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Route(value = "Expenses", layout = MainLayout.class)
 @PageTitle("Expenses")
@@ -36,6 +41,12 @@ public class MainView extends VerticalLayout {
     private DatePicker datePicker;
     private ComboBox<String> recurringCombo;
 
+    // Summary components
+    private Span monthlyTotalSpan;
+    private Span thisMonthSpan;
+    private Span topCategorySpan;
+    private Span expenseCountSpan;
+
     public MainView() {
         setSizeFull();
         setPadding(true);
@@ -50,13 +61,101 @@ public class MainView extends VerticalLayout {
                 .set("font-weight", "700")
                 .set("font-size", "2rem");
 
+        // Monthly summary card
+        VerticalLayout summaryCard = createMonthlySummaryCard();
+
         // Form card
         VerticalLayout formCard = createFormCard();
 
         // Grid card
         VerticalLayout gridCard = createGridCard();
 
-        add(title, formCard, gridCard);
+        add(title, summaryCard, formCard, gridCard);
+
+        // Initialize summary
+        updateMonthlySummary();
+    }
+
+    private VerticalLayout createMonthlySummaryCard() {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+                .set("background", "linear-gradient(135deg, var(--lumo-primary-color) 0%, var(--lumo-primary-color-50pct) 100%)")
+                .set("border-radius", "16px")
+                .set("padding", "2rem")
+                .set("box-shadow", "0 4px 16px rgba(0,0,0,0.15)")
+                .set("margin-bottom", "1.5rem")
+                .set("color", "white");
+
+        H3 summaryTitle = new H3("📊 Monthly Expense Overview");
+        summaryTitle.getStyle()
+                .set("margin", "0 0 1.5rem 0")
+                .set("color", "white")
+                .set("font-weight", "600")
+                .set("text-align", "center");
+
+        // Create stats layout
+        HorizontalLayout statsLayout = new HorizontalLayout();
+        statsLayout.setWidthFull();
+        statsLayout.setJustifyContentMode(HorizontalLayout.JustifyContentMode.CENTER);
+        statsLayout.setSpacing(true);
+
+        // This month expenses
+        VerticalLayout thisMonthCard = createStatMiniCard("This Month", "€0.00");
+        thisMonthSpan = (Span) thisMonthCard.getComponentAt(0);
+
+        // Total monthly average
+        VerticalLayout totalCard = createStatMiniCard("Monthly Average", "€0.00");
+        monthlyTotalSpan = (Span) totalCard.getComponentAt(0);
+
+        // Top category
+        VerticalLayout categoryCard = createStatMiniCard("Top Category", "None");
+        topCategorySpan = (Span) categoryCard.getComponentAt(0);
+
+        // Total expenses this month count
+        VerticalLayout countCard = createStatMiniCard("This Month Count", "0");
+        expenseCountSpan = (Span) countCard.getComponentAt(0);
+
+        statsLayout.add(thisMonthCard, totalCard, categoryCard, countCard);
+        card.add(summaryTitle, statsLayout);
+
+        return card;
+    }
+
+    private VerticalLayout createStatMiniCard(String label, String initialValue) {
+        VerticalLayout miniCard = new VerticalLayout();
+        miniCard.getStyle()
+                .set("background", "rgba(255,255,255,0.15)")
+                .set("border-radius", "12px")
+                .set("padding", "1rem")
+                .set("text-align", "center")
+                .set("backdrop-filter", "blur(10px)")
+                .set("min-width", "140px")
+                .set("transition", "transform 0.2s ease");
+
+        // Add hover effect
+        miniCard.getElement().addEventListener("mouseenter", e -> {
+            miniCard.getStyle().set("transform", "translateY(-2px)");
+        });
+        miniCard.getElement().addEventListener("mouseleave", e -> {
+            miniCard.getStyle().set("transform", "translateY(0)");
+        });
+
+        Span valueSpan = new Span(initialValue);
+        valueSpan.getStyle()
+                .set("font-size", "1.4rem")
+                .set("font-weight", "700")
+                .set("color", "white")
+                .set("display", "block");
+
+        Span labelSpan = new Span(label);
+        labelSpan.getStyle()
+                .set("font-size", "0.8rem")
+                .set("color", "rgba(255,255,255,0.8)")
+                .set("display", "block")
+                .set("margin-top", "0.25rem");
+
+        miniCard.add(valueSpan, labelSpan);
+        return miniCard;
     }
 
     private VerticalLayout createFormCard() {
@@ -153,6 +252,7 @@ public class MainView extends VerticalLayout {
             }
 
             updateGrid();
+            updateMonthlySummary(); // Update summary after saving
             clearForm();
         });
 
@@ -160,6 +260,7 @@ public class MainView extends VerticalLayout {
             if (selectedExpense != null) {
                 expenseService.deleteExpense(selectedExpense.getId());
                 updateGrid();
+                updateMonthlySummary(); // Update summary after deleting
                 clearForm();
                 Notification notification = Notification.show("Expense deleted successfully!");
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -239,9 +340,9 @@ public class MainView extends VerticalLayout {
         expenseGrid.setItems(expenseService.getAllExpenses());
         expenseGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         expenseGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COLUMN_BORDERS);
-        expenseGrid.setHeight("400px"); // Set a fixed height instead
+        expenseGrid.setHeight("400px");
 
-        // Selection handler - we need to pass the form fields to populate them
+        // Selection handler
         expenseGrid.asSingleSelect().addValueChangeListener(e -> {
             selectedExpense = e.getValue();
             populateFormFields(selectedExpense);
@@ -249,6 +350,86 @@ public class MainView extends VerticalLayout {
 
         card.add(cardTitle, expenseGrid);
         return card;
+    }
+
+    private void updateMonthlySummary() {
+        List<Expense> allExpenses = expenseService.getAllExpenses();
+        LocalDate now = LocalDate.now();
+        LocalDate currentMonth = now.withDayOfMonth(1);
+
+        // Calculate this month's expenses (including recurring)
+        double thisMonthTotal = 0.0;
+        int thisMonthCount = 0;
+
+        for (Expense expense : allExpenses) {
+            if (isExpenseForMonth(expense, currentMonth)) {
+                thisMonthTotal += expense.getAmount();
+                thisMonthCount++;
+            }
+        }
+
+        // Calculate monthly average for the last 12 months
+        double monthlyAverage = calculateMonthlyAverage(allExpenses, now);
+
+        // Find top category this month
+        String topCategory = findTopCategoryThisMonth(allExpenses, currentMonth);
+
+        // Update UI components
+        thisMonthSpan.setText("€" + String.format("%.2f", thisMonthTotal));
+        monthlyTotalSpan.setText("€" + String.format("%.2f", monthlyAverage));
+        topCategorySpan.setText(topCategory);
+        expenseCountSpan.setText(String.valueOf(thisMonthCount));
+    }
+
+    private boolean isExpenseForMonth(Expense expense, LocalDate targetMonth) {
+        LocalDate expenseMonth = expense.getDate().withDayOfMonth(1);
+
+        if (!expense.getRecurring()) {
+            return expenseMonth.equals(targetMonth);
+        } else {
+            // For recurring expenses, check if they apply to the target month
+            if ("Monthly".equals(expense.getRecurrenceType())) {
+                return !expenseMonth.isAfter(targetMonth);
+            } else if ("Annually".equals(expense.getRecurrenceType())) {
+                return expenseMonth.getMonth().equals(targetMonth.getMonth()) &&
+                        !expenseMonth.isAfter(targetMonth);
+            }
+        }
+        return false;
+    }
+
+    private double calculateMonthlyAverage(List<Expense> expenses, LocalDate currentDate) {
+        LocalDate startDate = currentDate.minusMonths(11).withDayOfMonth(1);
+        double total = 0.0;
+        int monthCount = 12;
+
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = startDate.plusMonths(i);
+            double monthTotal = 0.0;
+
+            for (Expense expense : expenses) {
+                if (isExpenseForMonth(expense, month)) {
+                    monthTotal += expense.getAmount();
+                }
+            }
+            total += monthTotal;
+        }
+
+        return total / monthCount;
+    }
+
+    private String findTopCategoryThisMonth(List<Expense> expenses, LocalDate currentMonth) {
+        Map<String, Double> categoryTotals = expenses.stream()
+                .filter(expense -> isExpenseForMonth(expense, currentMonth))
+                .collect(Collectors.groupingBy(
+                        Expense::getCategory,
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+
+        return categoryTotals.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("None");
     }
 
     private void updateGrid() {

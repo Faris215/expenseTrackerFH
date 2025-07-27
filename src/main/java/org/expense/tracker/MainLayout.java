@@ -66,7 +66,7 @@ public class MainLayout extends AppLayout {
         RouterLink bankBalanceLink = createStyledRouterLink("🏦 Bank Balance", BankBalanceView.class);
 
         VerticalLayout menuLayout = new VerticalLayout(
-                mainLink, expensesLink, incomeLink, bankBalanceLink, compareLink, balanceLink
+                mainLink, expensesLink, incomeLink, bankBalanceLink, balanceLink, compareLink
         );
         menuLayout.setPadding(false);
         menuLayout.setSpacing(false);
