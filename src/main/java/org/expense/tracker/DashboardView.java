@@ -5,6 +5,7 @@ import com.vaadin.flow.component.board.Row;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -61,18 +62,10 @@ public class DashboardView extends VerticalLayout {
                 .set("font-weight", "700")
                 .set("font-size", "2rem");
 
-        // Stats cards
-        Board board = new Board();
-        Row row1 = board.addRow(
-                createStatCard("🏦 Bank Balance", "€" + round(currentBankBalance), currentBankBalance >= 0 ? "success" : "error"),
-                createStatCard("📈 Calculated Balance", "€" + round(calculatedBalance), calculatedBalance >= 0 ? "success" : "error"),
-                createStatCard("💰 This Month's Income", "€" + round(monthlyIncome), "primary"),
-                createStatCard("💸 This Month's Expenses", "€" + round(monthlyExpenses), "contrast")
-        );
+        // Enhanced summary card with blue gradient
+        VerticalLayout summaryCard = createSummaryCard(currentBankBalance, calculatedBalance, monthlyIncome, monthlyExpenses, topCategory);
 
-        Row row2 = board.addRow(
-                createStatCard("📊 Top Category", topCategory, "secondary")
-        );
+        // Stats cards
 
         // Charts section
         HorizontalLayout chartsLayout = new HorizontalLayout();
@@ -117,7 +110,96 @@ public class DashboardView extends VerticalLayout {
 
         chartsLayout.add(leftChart, rightChart);
 
-        add(dashboardTitle, board, chartsLayout);
+        add(dashboardTitle, summaryCard, chartsLayout);
+    }
+
+    private VerticalLayout createSummaryCard(double bankBalance, double calculatedBalance, double monthlyIncome, double monthlyExpenses, String topCategory) {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+                .set("background", "linear-gradient(135deg, var(--lumo-primary-color) 0%, var(--lumo-primary-color-50pct) 100%)")
+                .set("border-radius", "16px")
+                .set("padding", "2rem")
+                .set("box-shadow", "0 4px 16px rgba(0,0,0,0.15)")
+                .set("margin-bottom", "1.5rem")
+                .set("color", "white");
+
+        H3 summaryTitle = new H3("💰 Financial Overview");
+        summaryTitle.getStyle()
+                .set("margin", "0 0 1.5rem 0")
+                .set("color", "white")
+                .set("font-weight", "600")
+                .set("text-align", "center")
+                .set("font-size", "1.5rem");
+
+        // Create stats layout
+        HorizontalLayout statsLayout = new HorizontalLayout();
+        statsLayout.setWidthFull();
+        statsLayout.setJustifyContentMode(HorizontalLayout.JustifyContentMode.CENTER);
+        statsLayout.setSpacing(true);
+
+        // Bank Balance
+        VerticalLayout bankCard = createBlueMiniStatCard("Bank Balance", "€" + round(bankBalance), bankBalance >= 0);
+
+        // Monthly Net
+        double monthlyNet = monthlyIncome - monthlyExpenses;
+        VerticalLayout netCard = createBlueMiniStatCard("Monthly Net", "€" + round(monthlyNet), monthlyNet >= 0);
+
+        // Monthly Income
+        VerticalLayout incomeCard = createBlueMiniStatCard("Monthly Income", "€" + round(monthlyIncome), true);
+
+        // Monthly Expenses
+        VerticalLayout expenseCard = createBlueMiniStatCard("Monthly Expenses", "€" + round(monthlyExpenses), false);
+
+        // Top Category
+        VerticalLayout categoryCard = createBlueMiniStatCard("Top Category", topCategory, true);
+
+        statsLayout.add(bankCard, incomeCard, expenseCard, netCard, categoryCard);
+        card.add(summaryTitle, statsLayout);
+
+        return card;
+    }
+
+    private VerticalLayout createBlueMiniStatCard(String label, String value, boolean isPositive) {
+        VerticalLayout miniCard = new VerticalLayout();
+        miniCard.getStyle()
+                .set("background", "rgba(255,255,255,0.15)")
+                .set("border-radius", "12px")
+                .set("padding", "1rem")
+                .set("text-align", "center")
+                .set("backdrop-filter", "blur(10px)")
+                .set("min-width", "140px")
+                .set("transition", "transform 0.2s ease");
+
+        // Add hover effect
+        miniCard.getElement().addEventListener("mouseenter", e -> {
+            miniCard.getStyle().set("transform", "translateY(-2px)");
+        });
+        miniCard.getElement().addEventListener("mouseleave", e -> {
+            miniCard.getStyle().set("transform", "translateY(0)");
+        });
+
+        Span valueSpan = new Span(value);
+        valueSpan.getStyle()
+                .set("font-size", "1.4rem")
+                .set("font-weight", "700")
+                .set("display", "block");
+
+        // Set color based on context
+        if (value.startsWith("€")) {
+            valueSpan.getStyle().set("color", isPositive ? "#4ade80" : "#f87171"); // Green for positive, red for negative
+        } else {
+            valueSpan.getStyle().set("color", "white");
+        }
+
+        Span labelSpan = new Span(label);
+        labelSpan.getStyle()
+                .set("font-size", "0.8rem")
+                .set("color", "rgba(255,255,255,0.8)")
+                .set("display", "block")
+                .set("margin-top", "0.25rem");
+
+        miniCard.add(valueSpan, labelSpan);
+        return miniCard;
     }
 
     private VerticalLayout createStatCard(String title, String value, String colorType) {
