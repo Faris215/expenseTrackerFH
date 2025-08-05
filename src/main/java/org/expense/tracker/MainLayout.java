@@ -1,16 +1,20 @@
 package org.expense.tracker;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinSession;
 
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
     private Button themeToggle;
     private boolean isDarkMode = true; // Default to dark mode
@@ -20,6 +24,13 @@ public class MainLayout extends AppLayout {
         createDrawer();
     }
 
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (!UserSession.isLoggedIn()) {
+            event.rerouteTo(LoginView.class);
+        }
+    }
+
     private void createHeader() {
         H1 logo = new H1("💰 Finance Tracker");
         logo.getStyle()
@@ -27,6 +38,24 @@ public class MainLayout extends AppLayout {
                 .set("font-size", "1.5rem")
                 .set("font-weight", "600")
                 .set("color", "var(--lumo-primary-text-color)");
+
+        // User info
+        User currentUser = UserSession.getCurrentUser();
+        Span userInfo = new Span("👤 " + (currentUser != null ? currentUser.getUsername() : "Guest"));
+        userInfo.getStyle()
+                .set("margin-right", "1rem")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        // Logout button
+        Button logoutButton = new Button("Logout");
+        logoutButton.setIcon(VaadinIcon.SIGN_OUT.create());
+        logoutButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        logoutButton.getStyle()
+                .set("margin-right", "1rem");
+        logoutButton.addClickListener(e -> {
+            UserSession.logout();
+            UI.getCurrent().navigate(LoginView.class);
+        });
 
         themeToggle = new Button();
         updateThemeToggleIcon();
@@ -48,8 +77,8 @@ public class MainLayout extends AppLayout {
                 .set("box-shadow", "0 2px 4px rgba(0,0,0,0.1)")
                 .set("background", "var(--lumo-base-color)");
 
-        // Add theme toggle to the right side
-        HorizontalLayout rightSide = new HorizontalLayout(themeToggle);
+        // Add user info and buttons to the right side
+        HorizontalLayout rightSide = new HorizontalLayout(userInfo, logoutButton, themeToggle);
         rightSide.setAlignItems(HorizontalLayout.Alignment.CENTER);
         header.add(rightSide);
         header.setJustifyContentMode(HorizontalLayout.JustifyContentMode.BETWEEN);
