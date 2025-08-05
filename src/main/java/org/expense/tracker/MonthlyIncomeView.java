@@ -211,7 +211,7 @@ public class MonthlyIncomeView extends VerticalLayout {
 
             dao.saveOrUpdateIncome(income);
             reloadGrid();
-            reloadSummary();
+//            reloadSummary();
             clearForm();
 
             Notification notification = Notification.show("Income saved for " +
@@ -223,7 +223,7 @@ public class MonthlyIncomeView extends VerticalLayout {
             if (selectedIncome != null) {
                 dao.deleteIncome(selectedIncome.getId());
                 reloadGrid();
-                reloadSummary();
+                //reloadSummary();
                 clearForm();
 
                 Notification notification = Notification.show("Income deleted successfully!");
@@ -300,11 +300,11 @@ public class MonthlyIncomeView extends VerticalLayout {
             selectedIncome = event.getValue();
             populateFormFields(selectedIncome);
 
-            if (selectedIncome != null) {
-                Notification.show("Selected: " +
-                        selectedIncome.getMonth().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) +
-                        " " + selectedIncome.getMonth().getYear(), 2000, Notification.Position.BOTTOM_CENTER);
-            }
+//            if (selectedIncome != null) {
+//                Notification.show("Selected: " +
+//                        selectedIncome.getMonth().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) +
+//                        " " + selectedIncome.getMonth().getYear(), 2000, Notification.Position.BOTTOM_CENTER);
+//            }
         });
 
         dataProvider = new ListDataProvider<>(dao.getAllIncome());

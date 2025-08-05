@@ -16,9 +16,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  */
 @SpringBootApplication
-@PWA(name = "Expense Tracker", shortName = "Expense Tracker")
+@PWA(name = "Finance Tracker", shortName = "Finance Tracker")
 @Theme(variant = Lumo.DARK)
-@PageTitle("Expense Tracker")
+@PageTitle("Finance Tracker")
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

@@ -21,7 +21,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void createHeader() {
-        H1 logo = new H1("💰 Expense Tracker");
+        H1 logo = new H1("💰 Finance Tracker");
         logo.getStyle()
                 .set("margin", "0.5rem 1rem")
                 .set("font-size", "1.5rem")
